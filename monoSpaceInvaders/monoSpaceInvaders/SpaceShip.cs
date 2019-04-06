@@ -13,10 +13,15 @@ namespace monoSpaceInvaders
     {
         List<Projectile> projectiles = new List<Projectile>();
         Texture2D projectileImage;
-
+        int randomNumber = 0;
         TimeSpan shootTime = TimeSpan.FromMilliseconds(500);
         TimeSpan elaspedShootTime = TimeSpan.Zero;
-
+        bool hasThingHappened = false;
+        int numberOfRows = 5;
+        int numberEliminated = 0;
+        float levelMultiplier = 1;
+        int numberOfInvaders = 10;
+        public int totalEliminations = 0;
         public int startFuel = 0;
 
         public SpaceShip(Vector2 vector2, Texture2D texture2D, Color color, Texture2D projectileImage, int startingFuel)
@@ -27,7 +32,7 @@ namespace monoSpaceInvaders
         }        
 
 
-        public void Update(Viewport viewport, GameTime gameTime, int speed, KeyboardState keyboard, KeyboardState preKeyboard, List<Invader> invaders)
+        public void Update(Viewport viewport, GameTime gameTime, int speed, KeyboardState keyboard, KeyboardState preKeyboard, List<Invader> invaders,List<Texture2D> invaderTextures, float invaderDirection)
         {          
             if (keyboard.IsKeyDown(Keys.A) && startFuel > 0)
             {
@@ -79,17 +84,74 @@ namespace monoSpaceInvaders
                             //  exit = true;
                             projectiles.RemoveAt(i);
                             invaders.RemoveAt(j);
-                           
+                                    numberEliminated += 1;
+                            totalEliminations += 1;
                             break;
                         }
                     }
                 }
-
+               
 
                 //if (exit)
                 //{
                 //    break;
                 //}
+            }
+            if(invaders.Count <= 100)
+            {
+                levelMultiplier *= (float)1.1;
+                
+                if (numberEliminated > 9)
+                {
+                    for (int i = 0; i < numberOfRows; i++)
+                    {
+                        for (int j = 0; j < numberOfInvaders / numberOfRows; j++)
+                        {
+                            if (randomNumber == 0)
+                            {
+                                randomNumber = 1;
+                            }
+                            else
+                            {
+                                randomNumber = 0;
+                            }
+                            Vector2 vector2 = new Vector2((j * 128), 100 * i);
+
+                            invaders.Add(new Invader(vector2, invaderTextures[randomNumber], Color.White, invaderDirection));
+                        }
+
+                    }
+                    numberEliminated -= 10;
+                }
+                hasThingHappened = true;
+            }
+            for(int i = 0; i < invaders.Count(); i++)
+            {
+                if(hasThingHappened)
+                {
+                    invaders[i].direction *= levelMultiplier;
+                    hasThingHappened = false;
+                }
+            }
+            
+            for (int i = 0; i < invaders.Count(); i++)
+            {
+                if(invaders[i].position.X + invaders[i].texture.Width >= viewport.Width)
+                {
+                    invaders[i].direction *= (float)-1.1;
+                    invaders[i].position.Y += 20;
+                    invaders[i].position.X -= 15;
+                }
+                else if(invaders[i].position.X <= 0)
+                {
+                    invaders[i].direction *= (float)-1.1;
+                    invaders[i].position.Y += 20;
+                    invaders[i].position.X += 15;
+                }
+                else
+                {
+                    invaders[i].position.X += 2 * invaders[i].direction;
+                }
             }
 
         }

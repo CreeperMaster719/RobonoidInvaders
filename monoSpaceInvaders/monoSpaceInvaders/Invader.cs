@@ -11,8 +11,12 @@ namespace monoSpaceInvaders
 {
     class Invader : Sprite
     {
-        public Invader(Vector2 vector2, Texture2D texture2D, Color color)
-: base(vector2, texture2D, color) { }
+        public float direction;
+        public Invader(Vector2 vector2, Texture2D texture2D, Color color, float direction)
+: base(vector2, texture2D, color)
+        {
+            this.direction = direction;
+        }
 
         
 
