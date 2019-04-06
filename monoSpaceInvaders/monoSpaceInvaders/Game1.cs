@@ -55,9 +55,9 @@ namespace monoSpaceInvaders
             spriteBatch = new SpriteBatch(GraphicsDevice);
             font = Content.Load<SpriteFont>("font");
             invaderTextures = new List<Texture2D>();
-            Texture2D testTextureP = Content.Load<Texture2D>("Test_Projectile");
+            Texture2D testTextureP = Content.Load<Texture2D>("pearlspear");
             Texture2D testTextureI = Content.Load<Texture2D>("Test_Invader");
-            Texture2D testTextureS = Content.Load<Texture2D>("Test_Ship");
+            Texture2D testTextureS = Content.Load<Texture2D>("ship");
             invaderTextures.Add (invaderStyle1 = Content.Load<Texture2D>("invader"));
             invaderTextures.Add (invaderStyle2 = Content.Load<Texture2D>("invader2"));
             Vector2 testPositionP = new Vector2(-100, -100);
@@ -80,7 +80,7 @@ namespace monoSpaceInvaders
                     {
                         randomNumber = 0;
                     }
-                    Vector2 vector2 = new Vector2((j * 128), 100 * i);
+                    Vector2 vector2 = new Vector2(((j - 1) * 128), 100 * i);
 
                     invaders.Add(new Invader(vector2, invaderTextures[randomNumber], testTintI, invaderDirection));
                 }
@@ -100,7 +100,11 @@ namespace monoSpaceInvaders
             preKeyboard = keyboard;
             keyboard = Keyboard.GetState();
             // TODO: Add your update logic here
-            testSpaceShip.Update(GraphicsDevice.Viewport, gameTime, 2, keyboard, preKeyboard, invaders, invaderTextures, invaderDirection);
+            if(testSpaceShip.frozen == 0)
+            {
+                testSpaceShip.Update(GraphicsDevice.Viewport, gameTime, 2, keyboard, preKeyboard, invaders, invaderTextures, invaderDirection);
+            }
+
             base.Update(gameTime);
         }
 

@@ -19,6 +19,8 @@ namespace monoSpaceInvaders
         bool hasThingHappened = false;
         int numberOfRows = 5;
         int numberEliminated = 0;
+        public int frozen = 0;
+        float set = 0;
         float levelMultiplier = 1;
         int numberOfInvaders = 10;
         public int totalEliminations = 0;
@@ -48,7 +50,7 @@ namespace monoSpaceInvaders
             if (keyboard.IsKeyDown(Keys.Space) && preKeyboard.IsKeyUp(Keys.Space))
             {
                 elaspedShootTime = TimeSpan.Zero;
-                projectiles.Add(new Projectile(position, projectileImage, Color.White));
+                projectiles.Add(new Projectile(new Vector2(position.X + (float)(texture.Width * (3/4)), position.Y - texture.Height), projectileImage, Color.White));
             }
             else if (keyboard.IsKeyDown(Keys.Space))
             { 
@@ -97,9 +99,9 @@ namespace monoSpaceInvaders
                 //    break;
                 //}
             }
-            if(invaders.Count <= 100)
+            if(invaders.Count <= 40)
             {
-                levelMultiplier *= (float)1.1;
+                levelMultiplier *= (float)1.01;
                 
                 if (numberEliminated > 9)
                 {
@@ -115,9 +117,10 @@ namespace monoSpaceInvaders
                             {
                                 randomNumber = 0;
                             }
-                            Vector2 vector2 = new Vector2((j * 128), 100 * i);
+                            Vector2 vector2 = new Vector2((j * 128), 2 * i);
 
                             invaders.Add(new Invader(vector2, invaderTextures[randomNumber], Color.White, invaderDirection));
+                            invaders[j].direction = set;
                         }
 
                     }
@@ -129,33 +132,41 @@ namespace monoSpaceInvaders
             {
                 if(hasThingHappened)
                 {
-                    invaders[i].direction *= levelMultiplier;
-                    hasThingHappened = false;
+                  invaders[i].direction *= levelMultiplier;
+                    set = Math.Abs(invaders[i].direction);  
                 }
             }
-            
+            hasThingHappened = false;
+
             for (int i = 0; i < invaders.Count(); i++)
             {
                 if(invaders[i].position.X + invaders[i].texture.Width >= viewport.Width)
                 {
-                    invaders[i].direction *= (float)-1.1;
+                    invaders[i].direction = -Math.Abs(invaders[i].direction * 1.1f);
                     invaders[i].position.Y += 20;
-                    invaders[i].position.X -= 15;
+                    invaders[i].position.X = viewport.Width - (5 + invaders[i].texture.Width);
                 }
                 else if(invaders[i].position.X <= 0)
                 {
-                    invaders[i].direction *= (float)-1.1;
+                    invaders[i].direction = Math.Abs(invaders[i].direction *1.1f);
                     invaders[i].position.Y += 20;
-                    invaders[i].position.X += 15;
+                    invaders[i].position.X = 5;
                 }
                 else
                 {
                     invaders[i].position.X += 2 * invaders[i].direction;
                 }
+
+                if(invaders[i].position.Y < 0)
+                {
+                    invaders.RemoveAt(i);
+                    frozen =1;
+                }
+                
             }
-
+            
         }
-
+        
         public override void Draw(SpriteBatch spriteBatch)
         {
             for (int i = 0; i < projectiles.Count; i++)
