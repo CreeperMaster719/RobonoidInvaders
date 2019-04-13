@@ -16,26 +16,32 @@ namespace monoSpaceInvaders
         int randomNumber = 0;
         TimeSpan shootTime = TimeSpan.FromMilliseconds(500);
         TimeSpan elaspedShootTime = TimeSpan.Zero;
+        TimeSpan meanEnemies = TimeSpan.Zero;
         bool hasThingHappened = false;
+        List<Texture2D> ITextures;
         int numberOfRows = 5;
         int numberEliminated = 0;
+        List<Projectile> IProjectiles = new List<Projectile>();
         public int frozen = 0;
         float set = 0;
+        Random random = new Random();
         float levelMultiplier = 1;
         int numberOfInvaders = 10;
         public int totalEliminations = 0;
         public int startFuel = 0;
 
-        public SpaceShip(Vector2 vector2, Texture2D texture2D, Color color, Texture2D projectileImage, int startingFuel)
+        public SpaceShip(Vector2 vector2, Texture2D texture2D, Color color, Texture2D projectileImage, int startingFuel, List<Texture2D> ITextures)
             : base(vector2, texture2D, color)
         {
             this.projectileImage = projectileImage;
+            this.ITextures = ITextures;
             startFuel = startingFuel;
         }        
 
 
         public void Update(Viewport viewport, GameTime gameTime, int speed, KeyboardState keyboard, KeyboardState preKeyboard, List<Invader> invaders,List<Texture2D> invaderTextures, float invaderDirection)
-        {          
+        {      
+            //~~~~~~~~~~~~~~~~~~~~Controls~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if (keyboard.IsKeyDown(Keys.A) && startFuel > 0)
             {
                 position.X -= 5 * speed;
@@ -66,8 +72,9 @@ namespace monoSpaceInvaders
             {
                 projectiles.Add(new Projectile(position, projectileImage, Color.White));
             }
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Invader Projectile Collision~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             
-
+            
             for (int i = 0; i <projectiles.Count; i++)
             {
                 projectiles[i].Update();
@@ -81,23 +88,23 @@ namespace monoSpaceInvaders
                 {
                     for (int j = 0; j < invaders.Count; j++)
                     {
-                        if (invaders[j].HitBox.Intersects(projectiles[i].HitBox))
+                        if(projectiles.Count > 1)
                         {
-                            //  exit = true;
-                            projectiles.RemoveAt(i);
-                            invaders.RemoveAt(j);
-                                    numberEliminated += 1;
-                            totalEliminations += 1;
-                            break;
+                            if (invaders[j].HitBox.Intersects(projectiles[i].HitBox))
+                            {
+                                //  exit = true;
+                                projectiles.RemoveAt(i);
+                                invaders.RemoveAt(j);
+                                startFuel += 50;
+                                numberEliminated += 1;
+                                totalEliminations += 1;
+                                break;
+                            }
                         }
+
                     }
                 }
-               
-
-                //if (exit)
-                //{
-                //    break;
-                //}
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~Speed Up and Respawn~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             }
             if(invaders.Count <= 40)
             {
@@ -117,7 +124,7 @@ namespace monoSpaceInvaders
                             {
                                 randomNumber = 0;
                             }
-                            Vector2 vector2 = new Vector2((j * 128), 2 * i);
+                            Vector2 vector2 = new Vector2((j * 128), 100 * i);
 
                             invaders.Add(new Invader(vector2, invaderTextures[randomNumber], Color.White, invaderDirection));
                             invaders[j].direction = set;
@@ -128,6 +135,7 @@ namespace monoSpaceInvaders
                 }
                 hasThingHappened = true;
             }
+            //~~~~~~~~~~~~~~~~~~~~~~~~~~~~Invader Movement~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             for(int i = 0; i < invaders.Count(); i++)
             {
                 if(hasThingHappened)
@@ -156,15 +164,45 @@ namespace monoSpaceInvaders
                 {
                     invaders[i].position.X += 2 * invaders[i].direction;
                 }
+                if (invaders[i].duration < meanEnemies.TotalMilliseconds)
+                {
+                    IProjectiles.Add (new Projectile(invaders[i].position, ITextures[random.Next(0,2)], Color.White));
 
-                if(invaders[i].position.Y < 0)
+                    for (int j = 0; j < IProjectiles.Count(); j++)
+                    {
+                       // IProjectiles[i].speed = -1;
+                        meanEnemies = TimeSpan.Zero;
+                    }
+                }
+
+                    //~~~~~~~~~~~~~~~~~~Game End~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    if (invaders[i].position.Y > viewport.Height)
                 {
                     invaders.RemoveAt(i);
                     frozen =1;
                 }
-                
+                //~~~~~~~~~~~~~~~~~~~~~~~Invader Projectile Movement and Fuel Reduction~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             }
-            
+            for (int j = 0; j < IProjectiles.Count; j++)
+            {
+                IProjectiles[j].Update();
+                IProjectiles[j].speed = -1;
+                if (IProjectiles[j].position.Y >= viewport.Height)
+                {
+                    IProjectiles.RemoveAt(j);
+                    
+                }
+                if(IProjectiles.Count > 0)
+                {
+                    if (IProjectiles[j].HitBox.Intersects(HitBox))
+                    {
+                        startFuel -= 1000;
+                        IProjectiles.RemoveAt(j);
+                    }
+                }
+
+            }
+            meanEnemies += gameTime.ElapsedGameTime;
         }
         
         public override void Draw(SpriteBatch spriteBatch)
@@ -172,6 +210,10 @@ namespace monoSpaceInvaders
             for (int i = 0; i < projectiles.Count; i++)
             {
                 projectiles[i].Draw(spriteBatch);
+            }
+            for (int i = 0; i < IProjectiles.Count; i++)
+            {
+                IProjectiles[i].Draw(spriteBatch);
             }
 
             base.Draw(spriteBatch);

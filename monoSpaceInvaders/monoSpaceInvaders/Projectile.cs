@@ -10,12 +10,13 @@ namespace monoSpaceInvaders
 {
     class Projectile : Sprite
     {
+        public int speed = 1;
         public Projectile(Vector2 vector2, Texture2D texture2D, Color color)
             : base(vector2, texture2D, color) { }
 
-        public void Update()
+        public virtual void Update()
         {
-            position.Y -= 5;
+            position.Y -= 5 * speed;
         }
 
     }

@@ -24,9 +24,13 @@ namespace monoSpaceInvaders
         List<Texture2D> invaderTextures;
         int randomNumber;
         List<Invader> invaders;
+        List<Texture2D> IProjectileTextures;
         SpriteFont font;
         Texture2D invaderStyle2;
         Texture2D invaderStyle1;
+        Texture2D background;
+        Texture2D InvaderProjectile1;
+        Texture2D InvaderProjectile2;
         int invadersEliminated = 0;
         public Game1()
         {
@@ -55,11 +59,15 @@ namespace monoSpaceInvaders
             spriteBatch = new SpriteBatch(GraphicsDevice);
             font = Content.Load<SpriteFont>("font");
             invaderTextures = new List<Texture2D>();
+            IProjectileTextures = new List<Texture2D>();
             Texture2D testTextureP = Content.Load<Texture2D>("pearlspear");
             Texture2D testTextureI = Content.Load<Texture2D>("Test_Invader");
             Texture2D testTextureS = Content.Load<Texture2D>("ship");
+            background = Content.Load<Texture2D>("DEEP PERIDOT");
             invaderTextures.Add (invaderStyle1 = Content.Load<Texture2D>("invader"));
             invaderTextures.Add (invaderStyle2 = Content.Load<Texture2D>("invader2"));
+            IProjectileTextures.Add (InvaderProjectile1 = Content.Load<Texture2D>("I_Projectile_1"));
+            IProjectileTextures.Add (InvaderProjectile2 = Content.Load<Texture2D>("I_Projectile_2"));
             Vector2 testPositionP = new Vector2(-100, -100);
             Vector2 testPositionI = new Vector2(120, 50);
             Vector2 testPositionS = new Vector2(100, 820);
@@ -67,7 +75,7 @@ namespace monoSpaceInvaders
             Color testTintI = Color.White;
             Color testTintS = Color.White;            
             testInvader = new Invader(testPositionI, testTextureI, testTintI, invaderDirection);
-            testSpaceShip = new SpaceShip(testPositionS, testTextureS, testTintS, testTextureP, 10000);            
+            testSpaceShip = new SpaceShip(testPositionS, testTextureS, testTintS, testTextureP, 10000, IProjectileTextures);            
             for(int i = 0; i < numberOfRows; i++)
             {
                 for(int j = 0; j < numberOfInvaders / numberOfRows; j++)
@@ -113,6 +121,7 @@ namespace monoSpaceInvaders
         {
             GraphicsDevice.Clear(Color.White);
             spriteBatch.Begin();
+            spriteBatch.Draw(background, new Rectangle(0, 0, background.Width, background.Height), Color.White);
             testSpaceShip.Draw(spriteBatch);
             //testInvader.Draw(spriteBatch);
             spriteBatch.DrawString(font, $"{testSpaceShip.startFuel}", new Vector2(testSpaceShip.position.X + 10, testSpaceShip.position.Y + 10), Color.Black);
