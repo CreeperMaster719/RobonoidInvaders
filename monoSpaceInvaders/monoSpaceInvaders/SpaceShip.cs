@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -13,6 +14,7 @@ namespace monoSpaceInvaders
     {
         List<Projectile> projectiles = new List<Projectile>();
         Texture2D projectileImage;
+
         int randomNumber = 0;
         TimeSpan shootTime = TimeSpan.FromMilliseconds(500);
         TimeSpan elaspedShootTime = TimeSpan.Zero;
@@ -26,20 +28,22 @@ namespace monoSpaceInvaders
         float set = 0;
         Random random = new Random();
         float levelMultiplier = 1;
+        bool trueWin = false;
         int numberOfInvaders = 10;
         public int totalEliminations = 0;
         public int startFuel = 0;
-
-        public SpaceShip(Vector2 vector2, Texture2D texture2D, Color color, Texture2D projectileImage, int startingFuel, List<Texture2D> ITextures)
+        Texture2D winCondition;
+        public SpaceShip(Vector2 vector2, Texture2D texture2D, Color color, Texture2D projectileImage, int startingFuel, List<Texture2D> ITextures, Texture2D winCondition)
             : base(vector2, texture2D, color)
         {
             this.projectileImage = projectileImage;
             this.ITextures = ITextures;
+            this.winCondition = winCondition;
             startFuel = startingFuel;
         }        
 
 
-        public void Update(Viewport viewport, GameTime gameTime, int speed, KeyboardState keyboard, KeyboardState preKeyboard, List<Invader> invaders,List<Texture2D> invaderTextures, float invaderDirection)
+        public void Update(Viewport viewport, GameTime gameTime, int speed, KeyboardState keyboard, KeyboardState preKeyboard, List<Invader> invaders,List<Texture2D> invaderTextures, float invaderDirection, SoundEffect loseSong, Texture2D winCondition)
         {      
             //~~~~~~~~~~~~~~~~~~~~Controls~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if (keyboard.IsKeyDown(Keys.A) && startFuel > 0)
@@ -53,24 +57,31 @@ namespace monoSpaceInvaders
                 startFuel -= 1;
             }
 
-            if (keyboard.IsKeyDown(Keys.Space) && preKeyboard.IsKeyUp(Keys.Space))
+            if(startFuel > 50)
             {
-                elaspedShootTime = TimeSpan.Zero;
-                projectiles.Add(new Projectile(new Vector2(position.X + (float)(texture.Width * (3/4)), position.Y - texture.Height), projectileImage, Color.White));
-            }
-            else if (keyboard.IsKeyDown(Keys.Space))
-            { 
-                elaspedShootTime += gameTime.ElapsedGameTime;
-
-                if (elaspedShootTime >= shootTime)
+                if (keyboard.IsKeyDown(Keys.Space) && preKeyboard.IsKeyUp(Keys.Space))
                 {
                     elaspedShootTime = TimeSpan.Zero;
-                    projectiles.Add(new Projectile(position, projectileImage, Color.White));
+                    projectiles.Add(new Projectile(new Vector2(position.X + (float)(texture.Width * (3 / 4)), position.Y - texture.Height), projectileImage, Color.White));
+                    startFuel -= 5;
+                }
+                else if (keyboard.IsKeyDown(Keys.Space))
+                {
+                    elaspedShootTime += gameTime.ElapsedGameTime;
+
+                    if (elaspedShootTime >= shootTime)
+                    {
+                        elaspedShootTime = TimeSpan.Zero;
+                        projectiles.Add(new Projectile(position, projectileImage, Color.White));
+                        startFuel -= 5;
+                    }
                 }
             }
-            else if(keyboard.IsKeyDown(Keys.C))
+
+            if(keyboard.IsKeyDown(Keys.C))
             {
                 projectiles.Add(new Projectile(position, projectileImage, Color.White));
+                startFuel -= 1;
             }
             //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Invader Projectile Collision~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             
@@ -83,6 +94,7 @@ namespace monoSpaceInvaders
                 {
                     projectiles.RemoveAt(i);
                 }
+
                 // bool exit = false;
                 if(invaders.Count > 0 && projectiles.Count > 0)
                 {
@@ -150,13 +162,20 @@ namespace monoSpaceInvaders
             {
                 if(invaders[i].position.X + invaders[i].texture.Width >= viewport.Width)
                 {
-                    invaders[i].direction = -Math.Abs(invaders[i].direction * 1.1f);
+  
+                        invaders[i].direction = -Math.Abs(invaders[i].direction * 1.1f);
+                    
+                    
                     invaders[i].position.Y += 20;
                     invaders[i].position.X = viewport.Width - (5 + invaders[i].texture.Width);
                 }
                 else if(invaders[i].position.X <= 0)
                 {
-                    invaders[i].direction = Math.Abs(invaders[i].direction *1.1f);
+                    
+                    
+                        invaders[i].direction = Math.Abs(invaders[i].direction * 1.1f);
+                    
+                    
                     invaders[i].position.Y += 20;
                     invaders[i].position.X = 5;
                 }
@@ -164,23 +183,50 @@ namespace monoSpaceInvaders
                 {
                     invaders[i].position.X += 2 * invaders[i].direction;
                 }
-                if (invaders[i].duration < meanEnemies.TotalMilliseconds)
+                if(invaders[i].direction > 9f)
+                {
+                    invaders[i].direction = 9f;
+                }
+                else if(invaders[i].direction < -9f)
+                {
+                    invaders[i].direction = -9f;
+                }
+                if (invaders[i].duration < invaders[i].meanEnemy.TotalMilliseconds)
                 {
                     IProjectiles.Add (new Projectile(invaders[i].position, ITextures[random.Next(0,2)], Color.White));
 
                     for (int j = 0; j < IProjectiles.Count(); j++)
                     {
                        // IProjectiles[i].speed = -1;
-                        meanEnemies = TimeSpan.Zero;
+                        invaders[i].meanEnemy = TimeSpan.Zero;
                     }
                 }
 
                     //~~~~~~~~~~~~~~~~~~Game End~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     if (invaders[i].position.Y > viewport.Height)
                 {
+                    loseSong.Play();
                     invaders.RemoveAt(i);
-                    frozen =1;
+                    frozen = 1;
                 }
+                if (startFuel < 0)
+                {
+                    loseSong.Play();
+                    invaders.RemoveAt(i);
+                    frozen = 1;
+                    
+                }
+                if (totalEliminations > 500)
+                {
+                    trueWin = true;
+                    for (int w = 0; w < invaders.Count; w++)
+                    {
+                        invaders.RemoveAt(w);
+                    }
+                    frozen = 1;
+
+                }
+
                 //~~~~~~~~~~~~~~~~~~~~~~~Invader Projectile Movement and Fuel Reduction~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             }
             for (int j = 0; j < IProjectiles.Count; j++)
@@ -194,15 +240,19 @@ namespace monoSpaceInvaders
                 }
                 if(IProjectiles.Count > 0)
                 {
-                    if (IProjectiles[j].HitBox.Intersects(HitBox))
+                    if(IProjectiles.Count() != j)
                     {
-                        startFuel -= 1000;
-                        IProjectiles.RemoveAt(j);
+                        if (IProjectiles[j].HitBox.Intersects(HitBox))
+                        {
+                            startFuel -= 750;
+                            IProjectiles.RemoveAt(j);
+                        }
                     }
+                    
                 }
 
             }
-            meanEnemies += gameTime.ElapsedGameTime;
+            
         }
         
         public override void Draw(SpriteBatch spriteBatch)
@@ -215,7 +265,10 @@ namespace monoSpaceInvaders
             {
                 IProjectiles[i].Draw(spriteBatch);
             }
-
+            if(trueWin)
+            {
+                spriteBatch.Draw(winCondition);
+            }
             base.Draw(spriteBatch);
         }
 

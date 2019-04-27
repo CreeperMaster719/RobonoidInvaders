@@ -13,15 +13,25 @@ namespace monoSpaceInvaders
     {
         public float direction;
         public int duration;
+        public TimeSpan meanEnemy = TimeSpan.Zero;
+        public bool canShoot = false;
+
         public Invader(Vector2 vector2, Texture2D texture2D, Color color, float direction)
-: base(vector2, texture2D, color)
+            : base(vector2, texture2D, color)
         {
             this.direction = direction;
             Random random = new Random();
-            duration = random.Next(500, 1000);
+
+
+
+
         }
 
-        
+        public void Update(GameTime gameTime, Random random)
+        {
+            meanEnemy += gameTime.ElapsedGameTime;
+            duration = random.Next(5000, 10000);
 
+        }
     }
 }
